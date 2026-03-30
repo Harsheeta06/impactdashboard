@@ -1,2 +1,4 @@
-posthog_data.json
+
 .env
+venv
+.venv

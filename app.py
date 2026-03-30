@@ -62,7 +62,7 @@ if df is not None:
 
     # --- TOP 5 IMPACTFUL ENGINEERS ---
     st.markdown("## 🏆 Top 5 Impactful Engineers")
-    st.info("Score = (PRs × 3) + (Reviews × 2) + (Bugs × 4)")
+    
 
     surgeons = df.groupby('author').apply(lambda x: (x['deletions'] - x['additions']).sum()).nlargest(5)
     closers = df.groupby('author')['hours_to_merge'].mean().nsmallest(5)
@@ -140,7 +140,6 @@ if df is not None:
             st.write(f"[View PR on GitHub]({pr['url']})")
 
 # --- SIDEBAR ---
-    st.sidebar.markdown(f"**Logged in as: GitHub User**")
     st.sidebar.divider()
     
     st.sidebar.markdown("""

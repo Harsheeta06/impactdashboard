@@ -7,18 +7,58 @@ st.set_page_config(layout="wide", page_title="PostHog Impact Engine")
 
 # --- CUSTOM UI STYLING ---
 st.markdown("""
-    <style>
-    .main { background-color: #0d1117; }
-    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; }
-    .stMetric label { font-size: 1.1rem !important; color: #8b949e !important; }
-    .stMetric [data-testid="stMetricValue"] { font-size: 2rem !important; font-weight: 700 !important; color: #58a6ff !important; }
-    h1 { font-size: 3.5rem !important; font-weight: 800 !important; color: #f0f6fc; }
-    h2 { font-size: 2.2rem !important; border-bottom: 1px solid #30363d; padding-bottom: 10px; color: #f0f6fc; }
-    h3 { font-size: 1.5rem !important; color: #c9d1d9; }
-    .persona-badge { background-color: #21262d; padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; border: 1px solid #30363d; margin-top: 10px; display: inline-block; }
-    .github-user { font-family: monospace; color: #79c0ff; font-weight: bold; font-size: 1.2rem; }
-    </style>
-    """, unsafe_allow_html=True)
+<style>
+.main { background-color: #0d1117; }
+
+/* Target the metric card container */
+[data-testid="stMetric"] {
+    background-color: #161b22;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #30363d;
+}
+
+/* Ensure labels (usernames/module names) wrap instead of truncating with ... */
+[data-testid="stMetricLabel"] > div {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.95rem !important; /* Slightly smaller to help fit */
+    color: #8b949e !important;
+    line-height: 1.2 !important;
+}
+
+/* Ensure the value (the big number) also wraps if necessary */
+[data-testid="stMetricValue"] > div {
+    white-space: normal !important;
+    font-size: 1.8rem !important; /* Slightly reduced from 2rem */
+    font-weight: 700 !important;
+    color: #58a6ff !important;
+}
+
+h1 { font-size: 3.5rem !important; font-weight: 800 !important; color: #f0f6fc; }
+h2 { font-size: 2.2rem !important; border-bottom: 1px solid #30363d; padding-bottom: 10px; color: #f0f6fc; }
+h3 { font-size: 1.5rem !important; color: #c9d1d9; }
+
+.persona-badge { 
+    background-color: #21262d; 
+    padding: 4px 10px; 
+    border-radius: 15px; 
+    font-size: 0.85rem; 
+    border: 1px solid #30363d; 
+    margin-top: 10px; 
+    display: inline-block; 
+}
+
+.github-user { 
+    font-family: monospace; 
+    color: #79c0ff; 
+    font-weight: bold; 
+    font-size: 1.1rem; 
+    word-break: break-all;
+}
+</style>
+""", unsafe_allow_html=True)
 
 def load_and_process():
     try:
@@ -62,7 +102,7 @@ if df is not None:
 
     # --- TOP 5 IMPACTFUL ENGINEERS ---
     st.markdown("## 🏆 Top 5 Impactful Engineers")
-    
+    st.info("Score = (PRs × 3) + (Reviews × 2) + (Bugs × 4)")
 
     surgeons = df.groupby('author').apply(lambda x: (x['deletions'] - x['additions']).sum()).nlargest(5)
     closers = df.groupby('author')['hours_to_merge'].mean().nsmallest(5)
@@ -82,8 +122,8 @@ if df is not None:
         with cols[i]:
             st.markdown(f'<p class="github-user">@{name}</p>', unsafe_allow_html=True)
             st.metric(
-                label="Impact Score", 
-                value=int(row['impact_score']), 
+                label="Impact Score",
+                value=int(row['impact_score']),
                 delta=f"{int(row['prs'])} PRs | {int(row['reviews'])} Reviews"
             )
             st.markdown(f'<div class="persona-badge">{get_persona_tags(name)}</div>', unsafe_allow_html=True)
@@ -123,6 +163,7 @@ if df is not None:
             s_cols = st.columns(min(len(critical_silos), 4))
             for i, (_, row) in enumerate(critical_silos.head(4).iterrows()):
                 with s_cols[i]:
+                    # Metric label will now wrap instead of showing '...'
                     st.metric(f"Module: {row['label_list']}", row['author'], f"{row['ownership_ratio']*100:.0f}% ownership")
     else:
         st.info("No label data available to determine silos.")
@@ -139,26 +180,19 @@ if df is not None:
             st.write(f"➖ {pr['deletions']} deletions | ➕ {pr['additions']} additions")
             st.write(f"[View PR on GitHub]({pr['url']})")
 
-# --- SIDEBAR ---
+    # --- SIDEBAR ---
     st.sidebar.divider()
-    
     st.sidebar.markdown("""
     ### 🧬 Principles
     - **Impact ≠ Output**
     - **Leverage > Volume**
     - **Complexity is liability**
     """)
-    
     st.sidebar.divider()
-    
     st.sidebar.markdown("""
     ### 🎭 Persona Definitions
-    
     **1. Surgeons** Engineers who prioritize code quality by removing more lines than they add, reducing technical debt.
-    
     **2. Closers** High-velocity contributors with the lowest average time from PR creation to merge.
-    
     **3. Multipliers** Team unblockers who drive leverage by providing the highest volume of peer code reviews.
-    
     **4. Sentinels** The frontline of reliability, specifically focused on identifying and shipping bug fixes.
     """)

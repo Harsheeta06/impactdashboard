@@ -68,13 +68,13 @@ def fetch_posthog_data():
         )
 
         if response.status_code != 200:
-            print(f"❌ HTTP Error: {response.status_code}")
+            print(f"HTTP Error: {response.status_code}")
             return
 
         res_json = response.json()
 
         if "errors" in res_json:
-            print(f"❌ GraphQL Error: {res_json['errors']}")
+            print(f"GraphQL Error: {res_json['errors']}")
             return
 
         data = res_json["data"]["repository"]["pullRequests"]
@@ -90,7 +90,7 @@ def fetch_posthog_data():
 
         print(f"Fetched {len(all_prs)} PRs so far...")
 
-    print("🔍 Filtering to last 90 days...")
+    print(" Filtering to last 90 days...")
 
     filtered_prs = [
         pr for pr in all_prs
@@ -100,16 +100,16 @@ def fetch_posthog_data():
     with open("posthog_data.json", "w") as f:
         json.dump(filtered_prs, f)
 
-    print(f"✅ Done! Saved {len(filtered_prs)} PRs from last 90 days.")
+    print(f" Done! Saved {len(filtered_prs)} PRs from last 90 days.")
 
-    # ✅ Validation (VERY IMPORTANT)
+    #  Validation 
     if filtered_prs:
         dates = [
             datetime.strptime(pr["mergedAt"], "%Y-%m-%dT%H:%M:%SZ")
             for pr in filtered_prs
         ]
 
-        print("\n📊 VALIDATION:")
+        print("\n VALIDATION:")
         print("Oldest PR:", min(dates))
         print("Newest PR:", max(dates))
         print("Total PRs:", len(filtered_prs))
